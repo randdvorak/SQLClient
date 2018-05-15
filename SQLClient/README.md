@@ -11,6 +11,6 @@
 #####                                %d  - NSNumber passed as int
 #####                                %f  - NSNumber passed as float
 #####                                %b - NSNumber passed as bit
-#####                                %D - NSDate passed as datetimeas
+#####                                %D - NSDate passed as datetime
 #####                                %B - NSData passed as binary data
 
