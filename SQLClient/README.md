@@ -5,7 +5,7 @@
 ### Library dependencies:   sybdb, iconv, crypto, ssl (ssl lib must support tls if using freetds)
 
 
-#### Remote procedure call parameter format:  An NSArray of NSDictionary where the key for the single value dict is  'param name' out- (optional, "in" is assumed if value present, NSNull if passing null or only an out parameter) 'type specifier'
+#### Remote procedure call parameter format:  An NSArray of NSDictionary where the key for the single value dict is  'param name' out- (optional, "in" is assumed if value present, NSNull if passing null or only an out parameter) 'type specifier' Example:  @{@"param1 out %d":@123}
 #### The following types specifiers are supported:
 #####                                %s - NString passed as char, varchar
 #####                                %d  - NSNumber passed as int
