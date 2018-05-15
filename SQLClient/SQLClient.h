@@ -88,9 +88,9 @@ extern NSString* _Nonnull const SQLClientSeverityKey;
 *         %s - parse string parameter
 *         %d - parse int parameter
 *         %f - parse float parameter
-*         %b - parse binary parameter
+*         %b - parse bit parameter
 *         %D - parse date parameter
-
+*         %B - parse binary parameter
 *
 *  Each row is an NSDictionary of columns where key = name and object = value as one of the following types:
 *  NSString, NSNumber, NSDecimalNumber, NSData, UIImage, NSDate, NSUUID
