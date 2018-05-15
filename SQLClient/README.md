@@ -14,3 +14,6 @@
 #####                                %D - NSDate passed as datetime
 #####                                %B - NSData passed as binary data
 
+
+###### Kudos to Martin Rybak for doing most of the heavy lifting
+
