@@ -1,4 +1,4 @@
-#  SQLClient - Native Microsoft SQL Server client updated to allow stored procedure calls
+#  SQLClient - Native Microsoft Objective-C SQL Server client updated to allow stored procedure calls
 
 ## Microsoft SQL Server does not return out parameters unless a call is made using dbrpcsend, this library remedies that
 
