@@ -16,7 +16,7 @@ int main(int argc, const char * argv[]) {
 	NSData* bin = [data dataUsingEncoding:NSUTF8StringEncoding];
 	
 	NSArray* args = @[@{@"@intin %d":@123},@{@"@intout out %d":[NSNull null]},@{@"@fltin %f":@3.14159},
-					  @{@"@fltout out %f":[NSNull null]}, @{@"@bitin %b":@1}, @{@"@bitout out %b":[NSNull null]},
+					  @{@"@fltout out %f":[NSNull null]}, @{@"@bitin %b":@0}, @{@"@bitout out %b":[NSNull null]},
 					   @{@"@datein %D":[NSDate date]}, @{@"@dateout out %D":[NSNull null]}, @{@"@stringin %s":@"TEST STRING"},
 					    @{@"@stringout out %s":[NSNull null]}, @{@"@datain %B":bin}, @{@"@dataout out %B":[NSNull null]}];
 		
