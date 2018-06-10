@@ -14,7 +14,7 @@
 #define SYBUNIQUEIDENTIFIER 36
 
 int const SQLClientDefaultTimeout = 5;
-int const SQLClientDefaultMaxTextSize = 4096;
+int const SQLClientDefaultMaxTextSize = 524288;
 NSString* const SQLClientDefaultCharset = @"UTF-8";
 NSString* const SQLClientPendingConnectionError = @"Attempting to connect while a connection is active.";
 NSString* const SQLClientLoginError = @"Error logging in.";
@@ -208,7 +208,7 @@ struct COLUMN
 		//Prepare SQL statement SQLClientPrepareStatementError
 		_returnCode = dbcmd(_connection, [sql UTF8String]);
 		if (_returnCode == FAIL) {
-			[self message:SQLClientPendingExecutionError];
+			[self message:SQLClientPrepareStatementError];
 			[self raiseExceptionWithName:@"PrepareStatementError" andReason:SQLClientPrepareStatementError];
 		}
 		
@@ -392,7 +392,7 @@ struct COLUMN
 				//Bind null value into column status
 				_returnCode = dbnullbind(_connection, c, &column->status);
 				if (_returnCode == FAIL) {
-					[self message:SQLClientPendingExecutionError];
+					[self message:SQLClientResultsError];
 					[self raiseExceptionWithName:@"ResultsError" andReason:SQLClientResultsError];
 				}
 			}
@@ -579,6 +579,7 @@ struct COLUMN
 		}
 		
 		//Success! Send an immutable copy of the results array
+		self.executing = NO;
 		return [output copy];
 }
 
@@ -611,12 +612,12 @@ struct COLUMN
 
 		}
 		
-		int* intValue = nil;
-		float* floatValue = nil;
-		char* stringValue = nil;
-		uint8_t* dataValue = nil;
-		u_char* bitValue = nil;
-		DBDATETIME* dateValue = nil;
+		int intValue = 0;
+		float floatValue = 0.0;
+		const char* stringValue = nil;
+		const uint8_t* dataValue = nil;
+		u_char bitValue = 0;
+	
 	
 		int i = 0;
 		if(args){
@@ -638,84 +639,86 @@ struct COLUMN
 				
 				if([aType containsString:@"b"]){
 					
+					u_char* tmpBitValue = nil;
 					if(value != [NSNull null]){
-						bitValue = calloc(1, sizeof(DBINT));
-						u_char tmpBitValue = [value unsignedCharValue];
-						memcpy(&bitValue, &tmpBitValue, sizeof(DBINT));
+						bitValue = [value unsignedCharValue];
+						tmpBitValue = calloc(1, sizeof(DBINT));
+						memcpy(tmpBitValue, &bitValue, sizeof(DBINT));
 						dataLen = sizeof(DBINT);
 					}else{
 						dataLen = 0;
 					}
 					
-					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBINT4, -1, dataLen, (BYTE*)&bitValue) == FAIL){
+					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBINT4, -1, dataLen, (BYTE*)tmpBitValue) == FAIL){
 						[self message:SQLClientProcedureParameterError];
 						[self raiseExceptionWithName:@"ParameterParseError" andReason:SQLClientProcedureParameterError];
 					}
 				}else if([aType containsString:@"d"]){
-					
+					int* tmpIntValue = nil;
 					if(value != [NSNull null]){
-						intValue = calloc(1, sizeof(DBINT));
-						int tmpIntValue = [value intValue];
-						memcpy(&intValue, &tmpIntValue, sizeof(DBINT));
+						intValue = [value intValue];
+						tmpIntValue = calloc(1, sizeof(DBINT));
+						memcpy(tmpIntValue, &intValue, sizeof(DBINT));
 						dataLen = sizeof(DBINT);
 					}else{
 						dataLen = 0;
 					}
 					
-					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBINT4, -1, dataLen, (BYTE*)&intValue) == FAIL){
+					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBINT4, -1, dataLen, (BYTE*)tmpIntValue) == FAIL){
 						[self message:SQLClientProcedureParameterError];
 						[self raiseExceptionWithName:@"ParameterParseError" andReason:SQLClientProcedureParameterError];
 					}
 				}else if([aType containsString:@"f"]){
-					
+					float* tmpFloatValue = nil;
 					if(value != [NSNull null]){
-						floatValue = calloc(1, sizeof(DBFLT8));
-						float tmpFloatValue = [value floatValue];
-						memcpy(&floatValue, &tmpFloatValue, sizeof(DBFLT8));
+						floatValue = [value floatValue];
+						tmpFloatValue = calloc(1, sizeof(DBFLT8));
+						memcpy(tmpFloatValue, &floatValue, sizeof(DBFLT8));
 						dataLen = sizeof(DBFLT8);
 					}else{
 						dataLen = 0;
 					}
 					
-					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBREAL, -1, dataLen, (BYTE*)&floatValue) == FAIL){
+					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBREAL, -1, dataLen, (BYTE*)tmpFloatValue) == FAIL){
 						[self message:SQLClientProcedureParameterError];
 						[self raiseExceptionWithName:@"ParameterParseError" andReason:SQLClientProcedureParameterError];
 					}
 				}else if([aType containsString:@"s"]){
-					
+					char* tmpStringValue = nil;
 					if(value != [NSNull null]){
-						stringValue = calloc([value length] + 1, sizeof(DBCHAR));
-						const char* tmpStringValue = [value UTF8String];
-						memcpy(stringValue, tmpStringValue, [value length] + 1);
+						stringValue = [value UTF8String];
+						tmpStringValue = calloc([value length] + 1, sizeof(DBCHAR));
+						memcpy(tmpStringValue, stringValue, [value length] + 1);
 						dataLen = (int)([value length] + 1) * sizeof(DBCHAR);
 					}else{
 						dataLen = 0;
 					}
 					
-					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBCHAR, -1, dataLen, (BYTE*)stringValue) == FAIL){
+					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBCHAR, -1, dataLen, (BYTE*)tmpStringValue) == FAIL){
 						[self message:SQLClientProcedureParameterError];
 						[self raiseExceptionWithName:@"ParameterParseError" andReason:SQLClientProcedureParameterError];
 					}
 				}else if([aType containsString:@"B"]){
-					
+					void* tmpDataValue = nil;
 					if(value != [NSNull null]){
-						dataValue = calloc([value length], sizeof(BYTE));
-						const void* tmpDataValue = [value bytes];
-						memcpy(dataValue, tmpDataValue, [value length]);
+						dataValue = [value bytes];
+						tmpDataValue = calloc([value length], sizeof(BYTE));
+						memcpy(tmpDataValue, dataValue, [value length]);
 						dataLen = (int)[value length];
 					}else{
 						dataLen = 0;
 					}
 					
-					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBBINARY, -1, dataLen, (BYTE*)dataValue) == FAIL){
+					if(dbrpcparam(_connection, [paramName UTF8String], isOutputParam ? (BYTE)DBRPCRETURN : (BYTE)0, SYBBINARY, -1, dataLen, (BYTE*)tmpDataValue) == FAIL){
 						[self message:SQLClientProcedureParameterError];
 						[self raiseExceptionWithName:@"ParameterParseError" andReason:SQLClientProcedureParameterError];
 					}
 				}else if([aType containsString:@"D"]){
-					
+					DBDATETIME* dateValue = nil;
 					if(value != [NSNull null]){
 						dateValue = calloc(1, sizeof(DBDATETIME));
 						NSCalendar* calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+						[calendar setTimeZone:[NSTimeZone systemTimeZone]];
 						NSDateComponents* dayDiff = [calendar components:NSCalendarUnitDay fromDate:[self referenceDate] toDate:value options:0];
 						NSDateComponents* midnite = [calendar components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:value];
 						NSTimeInterval sinceMidnite = [value timeIntervalSinceDate:[calendar dateFromComponents:midnite]];
@@ -904,7 +907,7 @@ struct COLUMN
 				//Create space for column data
 				column->data = calloc(1, column->size);
 				if (!column->data) {
-					[self message:SQLClientPendingExecutionError];
+					[self message:SQLClientMemoryAllocationError];
 					[self raiseExceptionWithName:@"MemoryAllocationError" andReason:SQLClientMemoryAllocationError];
 				}
 
@@ -918,7 +921,7 @@ struct COLUMN
 				//Bind null value into column status
 				_returnCode = dbnullbind(_connection, c, &column->status);
 				if (_returnCode == FAIL) {
-					[self message:SQLClientPendingExecutionError];
+					[self message:SQLClientResultsError];
 					[self raiseExceptionWithName:@"ResultsError" andReason:SQLClientResultsError];
 				}
 			}
@@ -1268,6 +1271,7 @@ struct COLUMN
 		[self cleanupAfterExecution];
 		
 		//Success! Send an immutable copy of the results array
+		self.executing = NO;
 		return [output copy];
 }
 
