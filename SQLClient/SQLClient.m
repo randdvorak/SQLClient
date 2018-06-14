@@ -687,9 +687,9 @@ struct COLUMN
 					char* tmpStringValue = nil;
 					if(value != [NSNull null]){
 						stringValue = [value UTF8String];
-						tmpStringValue = calloc([value length] + 1, sizeof(DBCHAR));
-						memcpy(tmpStringValue, stringValue, [value length] + 1);
-						dataLen = (int)([value length] + 1) * sizeof(DBCHAR);
+						tmpStringValue = calloc([value length], sizeof(DBCHAR));
+						memcpy(tmpStringValue, stringValue, [value length]);
+						dataLen = (int)([value length]) * sizeof(DBCHAR);
 					}else{
 						dataLen = 0;
 					}
